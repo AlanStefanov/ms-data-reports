@@ -4,3 +4,9 @@ pandas
 xlsxwriter
 openpyxl
 PyMySQL
+Flask
+openpyxl
+pandas
+PyMySQL
+python-dotenv
+xlsxwriter
