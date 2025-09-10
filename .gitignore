@@ -1,0 +1,21 @@
+# Replit specific files
+.replit
+replit.md
+.cache/
+.local/
+.pythonlibs/
+.upm/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.venv/
+venv/
+
+# Temporary files
+.DS_Store
+Thumbs.db
