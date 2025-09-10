@@ -14,12 +14,22 @@ def get_mysql_data(query: str) -> pd.DataFrame:
     """Ejecuta una consulta en MySQL y devuelve un DataFrame de pandas."""
     print("Conectando a la base de datos MySQL...")
     try:
+        mysql_port = os.environ.get('MYSQL_PORT')
+        mysql_host = os.environ.get('MYSQL_HOST')
+        mysql_user = os.environ.get('MYSQL_USER')
+        mysql_password = os.environ.get('MYSQL_PASSWORD')
+        mysql_db = os.environ.get('MYSQL_DB')
+        
+        if not all([mysql_host, mysql_port, mysql_user, mysql_password, mysql_db]):
+            print("Error: Faltan variables de entorno de MySQL")
+            return pd.DataFrame()
+        
         connection = pymysql.connect(
-            host=os.environ.get('MYSQL_HOST'),
-            port=int(os.environ.get('MYSQL_PORT')),
-            user=os.environ.get('MYSQL_USER'),
-            password=os.environ.get('MYSQL_PASSWORD'),
-            database=os.environ.get('MYSQL_DB'),
+            host=mysql_host,
+            port=int(mysql_port),
+            user=mysql_user,
+            password=mysql_password,
+            database=mysql_db,
             cursorclass=pymysql.cursors.DictCursor
         )
         print("Conexión exitosa. Ejecutando la consulta...")
@@ -95,14 +105,7 @@ def create_excel_report(df: pd.DataFrame, report_type: str, file_path: str):
 
 
 def get_reports_data():
-    """Genera los datos de los reportes y los devuelve como un diccionario de DataFrames."""
-    # Lógica para obtener el mes y año del reporte
-    meses = {1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"}
-    current_month = datetime.datetime.now().month
-    previous_month = current_month - 1 if current_month > 1 else 12
-    spanish_month = meses[previous_month]
-    current_year = datetime.datetime.now().year
-
+    """Obtiene los datos de los reportes y los devuelve como DataFrame."""
     # Tu nueva consulta SQL
     query = """
         SELECT
@@ -117,6 +120,7 @@ def get_reports_data():
             'Tradicional' AS CANAL_VENTA,
             UPPER(a.address_complement) AS DIRECCION,
             UPPER(a.city) AS CIUDAD,
+            o.created_at AS FECHA,
             CASE
                       WHEN (a.department) IN ('BOGOTÃ, D.C.', 'BOGOTÃ', 'BOGOTA', 'BOGOTA / PUENTE ARANDA') THEN 'BOGOTÃ, D.C.'
                       WHEN (a.department) IN ('BARRANQUILLA', 'BARRAQUILLA') THEN 'ATLÃNTICO'
@@ -138,7 +142,22 @@ def get_reports_data():
           AND od.final_quantity > 0;
     """
     
-    df_base = get_mysql_data(query)
+    return get_mysql_data(query)
+
+def generate_reports(temp_dir):
+    """Genera los reportes de Excel y devuelve la lista de archivos."""
+    # Lógica para obtener el mes y año del reporte
+    meses = {1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"}
+    current_month = datetime.datetime.now().month
+    previous_month = current_month - 1 if current_month > 1 else 12
+    spanish_month = meses[previous_month]
+    current_year = datetime.datetime.now().year
+
+    df_base = get_reports_data()
+    
+    if df_base.empty:
+        print("No hay datos para generar reportes")
+        return []
 
     # Nombres de los archivos
     iqvia_file = os.path.join(temp_dir, f'Data Farmu {spanish_month} {current_year} iqvia.xlsx')
