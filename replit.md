@@ -1,7 +1,7 @@
-# FarmuHub Data Reports
+# Saludia por Farmu - Data Reports
 
 ## Overview
-A Flask web application that generates Excel reports from MySQL database for IQVIA and CLOSEUP formats. The application provides a web interface to download reports in ZIP format or view the data in a table.
+A Flask web application that generates Excel reports from MySQL database for IQVIA and CLOSEUP formats. The application provides an elegant web interface with header banner to download reports in ZIP format or view the data in separate formatted tables.
 
 ## Current State
 - **Status**: Fully functional and running
