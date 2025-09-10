@@ -42,8 +42,8 @@
         }
 
         .container {
-            max-width: 900px;
-            width: 100%;
+            max-width: 1200px;
+            width: 90%;
             background-color: white;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
@@ -125,9 +125,9 @@
         }
 
         #reportDataContainer {
-            margin-top: 40px;
-            width: 100%;
-            max-width: 1200px;
+            margin: 40px auto 0 auto;
+            width: 95%;
+            max-width: 1400px;
             overflow-x: auto;
             background: white;
             border-radius: 15px;
@@ -193,10 +193,47 @@
             letter-spacing: 1px;
         }
 
+        /* Pantallas grandes (desktop horizontal) */
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1600px;
+                padding: 60px 80px;
+            }
+            
+            h1 {
+                font-size: 42px;
+            }
+            
+            .button-container {
+                gap: 30px;
+            }
+            
+            button {
+                min-width: 250px;
+                padding: 20px 40px;
+                font-size: 18px;
+            }
+            
+            #reportDataContainer {
+                max-width: 1600px;
+                padding: 40px;
+            }
+        }
+
+        /* Pantallas medianas (tablets landscape) */
+        @media (min-width: 1024px) and (max-width: 1399px) {
+            .container {
+                width: 85%;
+                max-width: 1100px;
+            }
+        }
+
+        /* Pantallas pequeñas (móviles) */
         @media (max-width: 768px) {
             .container {
                 margin: 20px;
                 padding: 30px 25px;
+                width: calc(100% - 40px);
             }
 
             h1 {
@@ -215,6 +252,13 @@
 
             .banner-img {
                 max-width: 250px;
+            }
+            
+            #reportDataContainer {
+                width: calc(100% - 40px);
+                margin-left: 20px;
+                margin-right: 20px;
+                padding: 20px;
             }
         }
     </style>
