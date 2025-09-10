@@ -121,7 +121,7 @@
         downloadButton.addEventListener('click', async () => {
             setStatus('Generando los reportes...', true);
             try {
-                const response = await fetch('http://localhost:5000/reports');
+                const response = await fetch('/reports');
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
@@ -147,7 +147,7 @@
             setStatus('Obteniendo datos...', true);
             reportDataContainer.innerHTML = ''; // Limpia el contenedor anterior
             try {
-                const response = await fetch('http://localhost:5000/reports-json');
+                const response = await fetch('/reports-json');
                 if (response.ok) {
                     const data = await response.json();
                     if (data.length > 0) {
