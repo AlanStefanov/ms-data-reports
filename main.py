@@ -106,7 +106,7 @@ def create_excel_report(df: pd.DataFrame, report_type: str, file_path: str):
 
 def get_reports_data():
     """Obtiene los datos de los reportes y los devuelve como DataFrame."""
-    # Tu nueva consulta SQL
+    # Consulta SQL original completa
     query = """
         SELECT
             p.barcode AS COD_PROD,
@@ -136,10 +136,11 @@ def get_reports_data():
         JOIN co_back_account.drugstores d on (d.id = e.drugstore_id)
         JOIN co_back_account.customer_shopify_legacies csl on (csl.account_id = d.account_id)
         JOIN co_back_address.addresses a on (a.id = oc.address_id)
-        WHERE o.created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-          AND o.created_at < DATE_FORMAT(CURDATE() + INTERVAL 1 MONTH, '%Y-%m-01')
+        WHERE o.created_at >= DATE_FORMAT(CURDATE() - INTERVAL 1 MONTH, '%Y-%m-01')
+          AND o.created_at < DATE_FORMAT(CURDATE(), '%Y-%m-01')
           AND o.status != 'cancelled'
-          AND od.final_quantity > 0;
+          AND od.final_quantity > 0
+        LIMIT 50;
     """
     
     return get_mysql_data(query)
