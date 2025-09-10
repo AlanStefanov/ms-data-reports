@@ -2,18 +2,60 @@ import os
 import io
 import shutil
 import tempfile
-from flask import Flask, send_file, jsonify, render_template
+from flask import Flask, send_file, jsonify, render_template, request, redirect, url_for, session, flash
 from main import generate_reports, get_reports_data, get_iqvia_format_data, get_closeup_format_data
 import zipfile
 
 app = Flask(__name__)
+app.secret_key = 'saludia_farmu_secret_key_2025'
 
-# Nueva ruta para servir el archivo HTML
+# Usuarios hardcodeados
+USERS = {
+    'admin': 'farmuengineering',
+    'controlling': 'saludia2025!'
+}
+
+# Función para verificar si el usuario está logueado
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Ruta de login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username in USERS and USERS[username] == password:
+            session['user'] = username
+            flash('Inicio de sesión exitoso', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Usuario o contraseña incorrectos', 'error')
+    
+    return render_template('login.html')
+
+# Ruta de logout
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    flash('Sesión cerrada exitosamente', 'success')
+    return redirect(url_for('login'))
+
+# Ruta principal protegida
 @app.route('/', methods=['GET'])
+@login_required
 def index():
-    return render_template('index.html')
+    return render_template('index.html', user=session.get('user'))
 
 @app.route('/reports', methods=['GET'])
+@login_required
 def get_reports():
     """Endpoint para generar y descargar los reportes en un archivo ZIP."""
     
@@ -42,6 +84,7 @@ def get_reports():
         shutil.rmtree(temp_dir)
 
 @app.route('/reports-json', methods=['GET'])
+@login_required
 def get_reports_json():
     """Endpoint para obtener los datos de los reportes en formato JSON."""
     try:
@@ -58,6 +101,7 @@ def get_reports_json():
         return jsonify({"error": "Error interno del servidor"}), 500
 
 @app.route('/reports-iqvia', methods=['GET'])
+@login_required
 def get_iqvia_reports():
     """Endpoint para obtener los datos del reporte IQVIA."""
     try:
@@ -70,6 +114,7 @@ def get_iqvia_reports():
         return jsonify({"error": "Error interno del servidor"}), 500
 
 @app.route('/reports-closeup', methods=['GET'])
+@login_required
 def get_closeup_reports():
     """Endpoint para obtener los datos del reporte CLOSEUP."""
     try:
