@@ -3,7 +3,7 @@ import io
 import shutil
 import tempfile
 from flask import Flask, send_file, jsonify, render_template
-from main import generate_reports, get_reports_data
+from main import generate_reports, get_reports_data, get_iqvia_format_data, get_closeup_format_data
 import zipfile
 
 app = Flask(__name__)
@@ -55,6 +55,30 @@ def get_reports_json():
 
     except Exception as e:
         print(f"Error al obtener los datos para el JSON: {e}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@app.route('/reports-iqvia', methods=['GET'])
+def get_iqvia_reports():
+    """Endpoint para obtener los datos del reporte IQVIA."""
+    try:
+        iqvia_data = get_iqvia_format_data()
+        if not iqvia_data:
+            return jsonify({"error": "No hay datos para generar el reporte IQVIA."}), 404
+        return jsonify(iqvia_data)
+    except Exception as e:
+        print(f"Error al obtener los datos IQVIA: {e}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@app.route('/reports-closeup', methods=['GET'])
+def get_closeup_reports():
+    """Endpoint para obtener los datos del reporte CLOSEUP."""
+    try:
+        closeup_data = get_closeup_format_data()
+        if not closeup_data:
+            return jsonify({"error": "No hay datos para generar el reporte CLOSEUP."}), 404
+        return jsonify(closeup_data)
+    except Exception as e:
+        print(f"Error al obtener los datos CLOSEUP: {e}")
         return jsonify({"error": "Error interno del servidor"}), 500
 
 if __name__ == '__main__':

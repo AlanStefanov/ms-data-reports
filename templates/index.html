@@ -86,11 +86,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>Descarga y Visualización de Reportes FarmuHub</h1>
-        <p>Selecciona una opción para gestionar los reportes.</p>
+        <h1>Reportes FarmuHub - IQVIA y CLOSEUP</h1>
+        <p>Selecciona el tipo de reporte que deseas visualizar o descargar.</p>
         <div class="button-container">
             <button id="downloadButton">Descargar Reportes (ZIP)</button>
-            <button id="showDataButton">Mostrar Datos en Tabla</button>
+            <button id="showIqviaButton">Mostrar Reporte IQVIA</button>
+            <button id="showCloseupButton">Mostrar Reporte CLOSEUP</button>
         </div>
         <div id="loadingIndicator" class="loader"></div>
         <p id="statusMessage"></p>
@@ -100,7 +101,8 @@
 
     <script>
         const downloadButton = document.getElementById('downloadButton');
-        const showDataButton = document.getElementById('showDataButton');
+        const showIqviaButton = document.getElementById('showIqviaButton');
+        const showCloseupButton = document.getElementById('showCloseupButton');
         const loadingIndicator = document.getElementById('loadingIndicator');
         const statusMessage = document.getElementById('statusMessage');
         const reportDataContainer = document.getElementById('reportDataContainer');
@@ -110,11 +112,13 @@
             if (isLoading) {
                 loadingIndicator.style.display = 'block';
                 downloadButton.disabled = true;
-                showDataButton.disabled = true;
+                showIqviaButton.disabled = true;
+                showCloseupButton.disabled = true;
             } else {
                 loadingIndicator.style.display = 'none';
                 downloadButton.disabled = false;
-                showDataButton.disabled = false;
+                showIqviaButton.disabled = false;
+                showCloseupButton.disabled = false;
             }
         }
 
@@ -143,29 +147,51 @@
             }
         });
 
-        showDataButton.addEventListener('click', async () => {
-            setStatus('Obteniendo datos...', true);
-            reportDataContainer.innerHTML = ''; // Limpia el contenedor anterior
+        showIqviaButton.addEventListener('click', async () => {
+            setStatus('Obteniendo datos IQVIA...', true);
+            reportDataContainer.innerHTML = '';
             try {
-                const response = await fetch('/reports-json');
+                const response = await fetch('/reports-iqvia');
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.length > 0) {
-                        renderTable(data);
-                        setStatus('Datos cargados exitosamente.');
+                    if (data && Object.keys(data).length > 0) {
+                        renderIqviaReport(data);
+                        setStatus('Reporte IQVIA cargado exitosamente.');
                     } else {
-                        setStatus('No se encontraron datos para mostrar.');
+                        setStatus('No se encontraron datos IQVIA para mostrar.');
                     }
                 } else {
-                    setStatus(`Error: No se pudieron obtener los datos. Código de estado: ${response.status}`);
+                    setStatus(`Error: No se pudieron obtener los datos IQVIA. Código de estado: ${response.status}`);
                 }
             } catch (error) {
-                console.error('Error al obtener los datos:', error);
+                console.error('Error al obtener los datos IQVIA:', error);
                 setStatus('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
             }
         });
 
-        function renderTable(data) {
+        showCloseupButton.addEventListener('click', async () => {
+            setStatus('Obteniendo datos CLOSEUP...', true);
+            reportDataContainer.innerHTML = '';
+            try {
+                const response = await fetch('/reports-closeup');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && Object.keys(data).length > 0) {
+                        renderCloseupReport(data);
+                        setStatus('Reporte CLOSEUP cargado exitosamente.');
+                    } else {
+                        setStatus('No se encontraron datos CLOSEUP para mostrar.');
+                    }
+                } else {
+                    setStatus(`Error: No se pudieron obtener los datos CLOSEUP. Código de estado: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error al obtener los datos CLOSEUP:', error);
+                setStatus('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
+            }
+        });
+
+        function renderTable(data, title) {
             const table = document.createElement('table');
             const headerRow = table.insertRow();
             
@@ -186,7 +212,59 @@
                 });
             });
 
+            // Agregar título si se proporciona
+            if (title) {
+                const titleElement = document.createElement('h3');
+                titleElement.textContent = title;
+                titleElement.style.marginTop = '20px';
+                titleElement.style.marginBottom = '10px';
+                titleElement.style.color = '#333';
+                reportDataContainer.appendChild(titleElement);
+            }
+            
             reportDataContainer.appendChild(table);
+        }
+
+        function renderIqviaReport(data) {
+            // Crear título principal
+            const mainTitle = document.createElement('h2');
+            mainTitle.textContent = 'Reporte IQVIA';
+            mainTitle.style.color = '#007BFF';
+            mainTitle.style.textAlign = 'center';
+            mainTitle.style.marginBottom = '20px';
+            reportDataContainer.appendChild(mainTitle);
+
+            // Renderizar cada sección
+            if (data.CLIENTES && data.CLIENTES.length > 0) {
+                renderTable(data.CLIENTES, 'CLIENTES');
+            }
+            if (data.PRODUCTOS && data.PRODUCTOS.length > 0) {
+                renderTable(data.PRODUCTOS, 'PRODUCTOS');
+            }
+            if (data.FACMES && data.FACMES.length > 0) {
+                renderTable(data.FACMES, 'FACMES');
+            }
+        }
+
+        function renderCloseupReport(data) {
+            // Crear título principal
+            const mainTitle = document.createElement('h2');
+            mainTitle.textContent = 'Reporte CLOSEUP';
+            mainTitle.style.color = '#28a745';
+            mainTitle.style.textAlign = 'center';
+            mainTitle.style.marginBottom = '20px';
+            reportDataContainer.appendChild(mainTitle);
+
+            // Renderizar cada sección
+            if (data.CLIENTES && data.CLIENTES.length > 0) {
+                renderTable(data.CLIENTES, 'CLIENTES');
+            }
+            if (data.PRODUCTOS && data.PRODUCTOS.length > 0) {
+                renderTable(data.PRODUCTOS, 'PRODUCTOS');
+            }
+            if (data.FACMES && data.FACMES.length > 0) {
+                renderTable(data.FACMES, 'FACMES');
+            }
         }
     </script>
 </body>

@@ -145,6 +145,57 @@ def get_reports_data():
     
     return get_mysql_data(query)
 
+def get_iqvia_format_data():
+    """Obtiene los datos en formato IQVIA."""
+    df_base = get_reports_data()
+    if df_base.empty:
+        return {}
+    
+    # CLIENTES IQVIA
+    clientes = df_base[['COD_CLI', 'NOMBRE_CLI', 'DIRECCION', 'CIUDAD', 'DEPARTAMENTO']].copy()
+    clientes = clientes.drop_duplicates().sort_values('COD_CLI')
+    
+    # FACMES IQVIA  
+    facmes = df_base[['COD_PROD', 'DESCRIPCION_PROD', 'COD_CLI', 'NOMBRE_CLI', 'UNIDADES', 'PRECIO_UNITARIO', 'FECHA', 'CANAL_VENTA']].copy()
+    facmes = facmes.sort_values('FECHA')
+    
+    # PRODUCTOS IQVIA
+    productos = df_base[['COD_PROD', 'DESCRIPCION_PROD', 'LABORATORIO', 'PRECIO_UNITARIO', 'COD_BARRA']].copy()
+    productos = productos.drop_duplicates().sort_values('DESCRIPCION_PROD')
+    
+    return {
+        'CLIENTES': clientes.to_dict('records'),
+        'FACMES': facmes.to_dict('records'), 
+        'PRODUCTOS': productos.to_dict('records')
+    }
+
+def get_closeup_format_data():
+    """Obtiene los datos en formato CLOSEUP."""
+    df_base = get_reports_data()
+    if df_base.empty:
+        return {}
+    
+    # CLIENTES CLOSEUP
+    clientes = df_base[['COD_CLI', 'NOMBRE_CLI', 'DIRECCION', 'CIUDAD', 'DEPARTAMENTO']].copy()
+    clientes = clientes.rename(columns={'COD_CLI': 'CODIGO_CLIENTE', 'NOMBRE_CLI': 'RAZON_SOCIAL'})
+    clientes = clientes.drop_duplicates().sort_values('CODIGO_CLIENTE')
+    
+    # FACMES CLOSEUP
+    facmes = df_base[['COD_CLI', 'COD_PROD', 'UNIDADES', 'PRECIO_UNITARIO', 'FECHA']].copy()
+    facmes = facmes.rename(columns={'COD_CLI': 'CODIGO_CLIENTE', 'COD_PROD': 'CODIGO_PRODUCTO'})
+    facmes = facmes.sort_values('FECHA', ascending=False)
+    
+    # PRODUCTOS CLOSEUP
+    productos = df_base[['COD_PROD', 'COD_BARRA', 'DESCRIPCION_PROD', 'LABORATORIO', 'PRECIO_UNITARIO']].copy()
+    productos = productos.rename(columns={'COD_PROD': 'CODIGO_PRODUCTO', 'COD_BARRA': 'EAN', 'DESCRIPCION_PROD': 'NOMBRE_PRODUCTO', 'PRECIO_UNITARIO': 'PRECIO'})
+    productos = productos.drop_duplicates().sort_values('NOMBRE_PRODUCTO')
+    
+    return {
+        'CLIENTES': clientes.to_dict('records'),
+        'FACMES': facmes.to_dict('records'),
+        'PRODUCTOS': productos.to_dict('records')
+    }
+
 def generate_reports(temp_dir):
     """Genera los reportes de Excel y devuelve la lista de archivos."""
     # Lógica para obtener el mes y año del reporte
