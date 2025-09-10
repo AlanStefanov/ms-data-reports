@@ -1,0 +1,1 @@
+docker rm -f reporte-farmu && docker build -t reporte-farmu-web . && docker run -d -p 5000:5000 --name reporte-farmu reporte-farmu-web

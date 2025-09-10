@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descarga de Reportes FarmuHub</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+            flex-direction: column;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            padding: 40px 60px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .button-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007BFF;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #statusMessage {
+            margin-top: 20px;
+        }
+        #reportDataContainer {
+            margin-top: 40px;
+            width: 100%;
+            max-width: 1000px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            white-space: nowrap; /* Evita que el texto se salte de línea */
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Descarga y Visualización de Reportes FarmuHub</h1>
+        <p>Selecciona una opción para gestionar los reportes.</p>
+        <div class="button-container">
+            <button id="downloadButton">Descargar Reportes (ZIP)</button>
+            <button id="showDataButton">Mostrar Datos en Tabla</button>
+        </div>
+        <div id="loadingIndicator" class="loader"></div>
+        <p id="statusMessage"></p>
+    </div>
+    
+    <div id="reportDataContainer"></div>
+
+    <script>
+        const downloadButton = document.getElementById('downloadButton');
+        const showDataButton = document.getElementById('showDataButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const statusMessage = document.getElementById('statusMessage');
+        const reportDataContainer = document.getElementById('reportDataContainer');
+
+        function setStatus(message, isLoading = false) {
+            statusMessage.innerText = message;
+            if (isLoading) {
+                loadingIndicator.style.display = 'block';
+                downloadButton.disabled = true;
+                showDataButton.disabled = true;
+            } else {
+                loadingIndicator.style.display = 'none';
+                downloadButton.disabled = false;
+                showDataButton.disabled = false;
+            }
+        }
+
+        downloadButton.addEventListener('click', async () => {
+            setStatus('Generando los reportes...', true);
+            try {
+                const response = await fetch('http://localhost:5000/reports');
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'Reportes_Farmu.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                    setStatus('¡Descarga completada!');
+                } else {
+                    setStatus(`Error: No se pudieron generar los reportes. Código de estado: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error al descargar los reportes:', error);
+                setStatus('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
+            }
+        });
+
+        showDataButton.addEventListener('click', async () => {
+            setStatus('Obteniendo datos...', true);
+            reportDataContainer.innerHTML = ''; // Limpia el contenedor anterior
+            try {
+                const response = await fetch('http://localhost:5000/reports-json');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.length > 0) {
+                        renderTable(data);
+                        setStatus('Datos cargados exitosamente.');
+                    } else {
+                        setStatus('No se encontraron datos para mostrar.');
+                    }
+                } else {
+                    setStatus(`Error: No se pudieron obtener los datos. Código de estado: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error al obtener los datos:', error);
+                setStatus('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
+            }
+        });
+
+        function renderTable(data) {
+            const table = document.createElement('table');
+            const headerRow = table.insertRow();
+            
+            // Crea las cabeceras de la tabla
+            const headers = Object.keys(data[0]);
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                headerRow.appendChild(th);
+            });
+
+            // Rellena la tabla con los datos
+            data.forEach(rowData => {
+                const row = table.insertRow();
+                headers.forEach(header => {
+                    const cell = row.insertCell();
+                    cell.textContent = rowData[header];
+                });
+            });
+
+            reportDataContainer.appendChild(table);
+        }
+    </script>
+</body>
+</html>
